@@ -37,6 +37,27 @@ python evaluate.py
 python report.py
 ```
 
+## 🔄 Quy Trình Làm Việc Tiêu Chuẩn
+
+### 1. Trên Máy Cá Nhân (Local) - Code & Test Nhẹ
+- **Mục đích**: Viết code, sửa lỗi, chạy thử với dữ liệu nhỏ.
+- **Thao tác**:
+    1. Sửa code trên máy.
+    2. Chạy thử: `python main.py --mode data` (để chắc chắn không lỗi).
+    3. **Đồng bộ lên Git**:
+       - Command Prompt: `git_sync.bat`
+       - PowerShell: `.\git_sync.bat`
+
+### 2. Trên Google Colab - Train "Hạng Nặng"
+- **Mục đích**: Tận dụng GPU miễn phí để train mô hình lâu (1 giờ+).
+- **Thao tác**:
+    1. Mở notebook `Colab_Run.ipynb`.
+    2. Chạy cell đầu tiên để **tự động clone/update code mới nhất** từ Git.
+    3. Chạy cell Train (đã set sẵn 1 giờ hoặc hơn).
+    4. **Lưu kết quả**: Cell cuối cùng sẽ lưu Model/Result vào Google Drive.
+
+---
+
 ## Demo Nhanh
 
 Sau khi huấn luyện xong, bạn có thể test mô hình:
