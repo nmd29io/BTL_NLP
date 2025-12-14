@@ -90,37 +90,21 @@ class MultiHeadAttention(nn.Module):
         Returns:
             output: [batch_size, seq_len, d_model]
         """
-        # #region agent log
-        import json
-        try:
-            with open(r'c:\Users\T480S\Desktop\BTL_NLP\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"transformer.py:92","message":"MultiHeadAttention forward entry","data":{"Q_shape":list(Q.shape),"K_shape":list(K.shape),"V_shape":list(V.shape),"d_model":self.d_model,"n_heads":self.n_heads,"d_k":self.d_k},"timestamp":int(time.time()*1000)})+'\n')
-        except: pass
-        # #endregion
+
         
         batch_size = Q.size(0)
         seq_len = Q.size(1)
         k_seq_len = K.size(1)
         v_seq_len = V.size(1)
         
-        # #region agent log
-        try:
-            with open(r'c:\Users\T480S\Desktop\BTL_NLP\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"transformer.py:100","message":"Before reshape","data":{"batch_size":batch_size,"seq_len":seq_len,"k_seq_len":k_seq_len,"v_seq_len":v_seq_len,"Q_size":Q.numel(),"K_size":K.numel(),"V_size":V.numel()},"timestamp":int(time.time()*1000)})+'\n')
-        except: pass
-        # #endregion
+
         
         # Linear transformation và chia thành heads
         Q = self.W_q(Q)
         K = self.W_k(K)
         V = self.W_v(V)
         
-        # #region agent log
-        try:
-            with open(r'c:\Users\T480S\Desktop\BTL_NLP\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"transformer.py:110","message":"After linear transform","data":{"Q_shape":list(Q.shape),"K_shape":list(K.shape),"V_shape":list(V.shape),"expected_K_shape":[batch_size,seq_len,self.n_heads,self.d_k],"actual_K_elements":K.numel()},"timestamp":int(time.time()*1000)})+'\n')
-        except: pass
-        # #endregion
+
         
         Q = Q.view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
         K = K.view(batch_size, k_seq_len, self.n_heads, self.d_k).transpose(1, 2)
@@ -132,12 +116,7 @@ class MultiHeadAttention(nn.Module):
         # Concatenate heads
         # Output length should match Q's length (seq_len), not K/V's length
         output_seq_len = attn_output.size(2)  # This should be seq_len (from Q)
-        # #region agent log
-        try:
-            with open(r'c:\Users\T480S\Desktop\BTL_NLP\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"transformer.py:120","message":"Before output reshape","data":{"attn_output_shape":list(attn_output.shape),"output_seq_len":output_seq_len,"seq_len":seq_len,"expected_output_shape":[batch_size,seq_len,self.d_model]},"timestamp":int(time.time()*1000)})+'\n')
-        except: pass
-        # #endregion
+
         attn_output = attn_output.transpose(1, 2).contiguous().view(
             batch_size, output_seq_len, self.d_model
         )

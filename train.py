@@ -28,7 +28,7 @@ from utils import get_device, WarmupScheduler, save_checkpoint, plot_training_hi
 
 
 
-def train_model_fast(config):
+def train_model(config):
     """Huấn luyện mô hình với cấu hình tối ưu cho 1 giờ"""
     
     # Device

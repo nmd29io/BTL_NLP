@@ -118,19 +118,21 @@ BTL_NLP/
 
 ## Ví Dụ Sử Dụng
 
-### Huấn luyện mô hình nhỏ (nhanh hơn):
+### Huấn luyện mô hình nhỏ (Tối ưu cho Demo/Colab - 1 Giờ):
 ```bash
 python train.py \
+    --max_time_hours 1.0 \
     --d_model 256 \
     --n_heads 4 \
     --n_encoder_layers 3 \
     --n_decoder_layers 3 \
     --d_ff 1024 \
-    --batch_size 64 \
-    --num_epochs 20
+    --batch_size 128 \
+    --max_len 64 \
+    --use_amp
 ```
 
-### Huấn luyện mô hình lớn (chất lượng tốt hơn):
+### Huấn luyện mô hình lớn (Chất lượng cao):
 ```bash
 python train.py \
     --d_model 512 \
@@ -140,6 +142,6 @@ python train.py \
     --d_ff 2048 \
     --batch_size 32 \
     --num_epochs 100 \
-    --learning_rate 5e-5
+    --learning_rate 1e-4
 ```
 

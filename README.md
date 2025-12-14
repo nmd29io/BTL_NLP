@@ -26,23 +26,23 @@ Dự án này triển khai đầy đủ kiến trúc Transformer từ các thàn
 
 ```mermaid
 graph TD
-    A[BTL_NLP] --> B[Source Code]
-    A --> C[Config & Run Scripts]
-    A --> D[Data & Output]
+    A["BTL_NLP"] --> B["Source Code"]
+    A --> C["Config & Run Scripts"]
+    A --> D["Data & Output"]
 
-    B --> B1[transformer.py<br/>(Kiến trúc Model)]
-    B --> B2[train.py<br/>(Train 1h tối ưu)]
-    B --> B3[evaluate.py<br/>(Đánh giá BLEU)]
-    B --> B4[data_processing.py<br/>(Xử lý dữ liệu)]
-    B --> B5[utils.py<br/>(Tiện ích)]
+    B --> B1["transformer.py<br/>(Kiến trúc Model)"]
+    B --> B2["train.py<br/>(Train 1h tối ưu)"]
+    B --> B3["evaluate.py<br/>(Đánh giá BLEU)"]
+    B --> B4["data_processing.py<br/>(Xử lý dữ liệu)"]
+    B --> B5["utils.py<br/>(Tiện ích)"]
 
-    C --> C1[Colab_Run.ipynb<br/>(Notebook chạy Colab)]
-    C --> C2[run_train_1h.bat/.sh<br/>(Script chạy nhanh)]
-    C --> C3[requirements.txt]
+    C --> C1["Colab_Run.ipynb<br/>(Notebook chạy Colab)"]
+    C --> C2["run_train_1h.bat/.sh<br/>(Script chạy nhanh)"]
+    C --> C3["requirements.txt"]
 
-    D --> D1[data/<br/>(Dữ liệu đã xử lý)]
-    D --> D2[models/<br/>(Lưu checkpoint)]
-    D --> D3[results/<br/>(Biểu đồ & Log)]
+    D --> D1["data/<br/>(Dữ liệu đã xử lý)"]
+    D --> D2["models/<br/>(Lưu checkpoint)"]
+    D --> D3["results/<br/>(Biểu đồ & Log)"]
 ```
 
 ### 📝 Chi Tiết Chức Năng
