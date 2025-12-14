@@ -141,27 +141,58 @@ class WarmupScheduler:
         """Lấy learning rate hiện tại"""
         return self.optimizer.param_groups[0]['lr']
 
+    def state_dict(self):
+        """Lưu trạng thái scheduler"""
+        return {
+            'current_step': self.current_step,
+            'base_lr': self.base_lr,
+            'warmup_steps': self.warmup_steps,
+            'd_model': self.d_model
+        }
 
-def save_checkpoint(model, optimizer, epoch, loss, path):
-    """Lưu checkpoint"""
-    torch.save({
+    def load_state_dict(self, state_dict):
+        """Tải trạng thái scheduler"""
+        self.current_step = state_dict['current_step']
+        self.base_lr = state_dict['base_lr']
+        self.warmup_steps = state_dict['warmup_steps']
+        self.d_model = state_dict['d_model']
+
+
+def save_checkpoint(model, optimizer, scheduler, epoch, loss, path, config=None):
+    """Lưu checkpoint và config (nếu có)"""
+    state = {
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
         'loss': loss,
-    }, path)
+    }
+    if config:
+        state['config'] = config
+        
+    torch.save(state, path)
     print(f"✓ Đã lưu checkpoint tại {path}")
 
 
-def load_checkpoint(model, optimizer, path, device):
+def load_checkpoint(model, optimizer, scheduler, path, device):
     """Tải checkpoint"""
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    if optimizer:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    if scheduler and 'scheduler_state_dict' in checkpoint and checkpoint['scheduler_state_dict']:
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        
     epoch = checkpoint['epoch']
     loss = checkpoint['loss']
+    config = checkpoint.get('config', None)
+    
     print(f"✓ Đã tải checkpoint từ epoch {epoch}, loss: {loss:.4f}")
-    return epoch, loss
+    if config:
+         print(f"  - Config tìm thấy: d_model={config.get('d_model')}, layers={config.get('n_encoder_layers')}")
+         
+    return epoch, loss, config
 
 
 def plot_training_history(train_losses, val_losses, train_perplexities=None, 

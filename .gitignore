@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project Specific
+models/
+results/
+data/*.pkl
+data/processed_data.pkl
+iwslt_en_vi/
+*.pt
+*.zip
+inspect_data.py

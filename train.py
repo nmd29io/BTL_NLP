@@ -118,13 +118,56 @@ def train_model(config, data=None):
     max_time_seconds = config.get('max_time_hours', 1.0) * 3600
     start_time = time.time()
     
+    # Resume from checkpoint if specified
+    start_epoch = 0
+    if config.get('resume_from'):
+        print(f"\nĐang tổi checkpoint từ {config['resume_from']}...")
+        if os.path.exists(config['resume_from']):
+            from utils import load_checkpoint
+            # Load checkpoint
+            loaded_epoch, loaded_loss, loaded_config = load_checkpoint(
+                model, optimizer, scheduler, config['resume_from'], device
+            )
+            start_epoch = loaded_epoch
+            print(f"✓ Đã khôi phục training từ epoch {start_epoch}")
+            
+            # Cập nhật config từ checkpoint nếu có (để đảm bảo nhất quán)
+            if loaded_config:
+                print("Lưu ý: Đang sử dụng cấu hình gốc từ checkpoint (có thể khác với tham số dòng lệnh)")
+        else:
+            print(f"⚠️ Không tìm thấy checkpoint tại {config['resume_from']}. Bắt đầu train mới.")
+    
     print("\n" + "="*60)
     print("BẮT ĐẦU HUẤN LUYỆN")
     print(f"Giới hạn thời gian: {config.get('max_time_hours', 1.0):.2f} giờ")
     print("="*60)
     
+                            
+    def cleanup_checkpoints(model_dir, keep_n):
+        """Xóa bớt các checkpoint cũ, chỉ giữ lại N cái mới nhất"""
+        checkpoints = []
+        for f in os.listdir(model_dir):
+            if f.startswith('checkpoint_epoch_') and f.endswith('.pt'):
+                path = os.path.join(model_dir, f)
+                # Parse epoch number from filename
+                try:
+                    epoch_num = int(f.split('_')[-1].split('.')[0])
+                    checkpoints.append((epoch_num, path))
+                except ValueError:
+                    continue
+        
+        # Sort by epoch (newest first)
+        checkpoints.sort(key=lambda x: x[0], reverse=True)
+        
+        # Remove old checkpoints
+        if len(checkpoints) > keep_n:
+            print(f"\nĐang dọn dẹp checkpoint (giữ lại {keep_n} bản mới nhất)...")
+            for _, path in checkpoints[keep_n:]:
+                os.remove(path)
+                print(f"  - Đã xóa: {os.path.basename(path)}")
+
     # Training loop
-    epoch = 0
+    epoch = start_epoch
     should_stop = False
     
     try:
@@ -153,7 +196,7 @@ def train_model(config, data=None):
                 
                 # Lưu final model
                 final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
-                save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
+                save_checkpoint(model, optimizer, scheduler, epoch, train_loss, final_model_path, config=config)
                 
                 # Nếu chưa có best model (chưa xong epoch 1), dùng luôn final model làm best
                 best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
@@ -186,7 +229,7 @@ def train_model(config, data=None):
                         best_val_loss = val_loss
                         patience_counter = 0
                         best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
-                        save_checkpoint(model, optimizer, epoch, val_loss, best_model_path)
+                        save_checkpoint(model, optimizer, scheduler, epoch, val_loss, best_model_path, config=config)
                     else:
                         patience_counter += 1
                     
@@ -200,20 +243,23 @@ def train_model(config, data=None):
                     print(f"Thời gian đã dùng: {(time.time() - start_time)/3600:.2f} giờ")
                     # Lưu model cuối cùng
                     final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
-                    save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
+                    save_checkpoint(model, optimizer, scheduler, epoch, train_loss, final_model_path, config=config)
             
             # Lưu checkpoint định kỳ
             if epoch % config.get('save_every', 5) == 0 and not should_stop:
                 checkpoint_path = os.path.join(config['model_dir'], f'checkpoint_epoch_{epoch}.pt')
-                save_checkpoint(model, optimizer, epoch, 
+                save_checkpoint(model, optimizer, scheduler, epoch, 
                               val_losses[-1] if val_losses else train_loss, 
-                              checkpoint_path)
+                              checkpoint_path, config=config)
+                
+                # Cleanup old checkpoints
+                cleanup_checkpoints(config['model_dir'], config.get('keep_last_n', 5))
 
     except KeyboardInterrupt:
         print("\n\n⚠️ Đã ngắt thủ công (Ctrl+C)!")
         print("Đang lưu model hiện tại (interrupted_model.pt)...")
         interrupted_path = os.path.join(config['model_dir'], 'interrupted_model.pt')
-        save_checkpoint(model, optimizer, epoch, 0.0, interrupted_path)
+        save_checkpoint(model, optimizer, scheduler, epoch, 0.0, interrupted_path, config=config)
         
         # Nếu chưa có best_model thì dùng luôn cái này
         best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
@@ -255,8 +301,12 @@ def train_model(config, data=None):
     if val_losses:
         print(f"Best Validation Loss: {best_val_loss:.4f}")
         print(f"Best Validation Perplexity: {calculate_perplexity(best_val_loss):.2f}")
-    print(f"Final Train Loss: {train_losses[-1]:.4f}")
-    print(f"Final Train Perplexity: {train_perplexities[-1]:.2f}")
+    
+    if train_losses:
+        print(f"Final Train Loss: {train_losses[-1]:.4f}")
+        print(f"Final Train Perplexity: {train_perplexities[-1]:.2f}")
+    else:
+        print("Chưa hoàn thành epoch nào.")
     
     return model, data
 
@@ -292,6 +342,8 @@ if __name__ == '__main__':
     parser.add_argument('--use_amp', action='store_true', default=True, help='Use mixed precision training')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of data loading workers')
     parser.add_argument('--max_time_hours', type=float, default=1.0, help='Maximum training time in hours')
+    parser.add_argument('--resume_from', type=str, default=None, help='Path to checkpoint to resume from')
+    parser.add_argument('--keep_last_n', type=int, default=5, help='Keep only N latest checkpoints (default: 5)')
     
     args = parser.parse_args()
     
@@ -318,7 +370,10 @@ if __name__ == '__main__':
         'weight_decay': args.weight_decay,
         'use_amp': args.use_amp,
         'num_workers': args.num_workers,
-        'max_time_hours': args.max_time_hours
+        'num_workers': args.num_workers,
+        'max_time_hours': args.max_time_hours,
+        'resume_from': args.resume_from,
+        'keep_last_n': args.keep_last_n
     }
     
     train_model(config)
