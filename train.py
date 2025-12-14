@@ -287,5 +287,5 @@ if __name__ == '__main__':
         'max_time_hours': args.max_time_hours
     }
     
-    train_model_fast(config)
+    train_model(config)
 
