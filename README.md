@@ -24,24 +24,44 @@ Dự án này triển khai đầy đủ kiến trúc Transformer từ các thàn
 
 ## 📁 Cấu Trúc Dự Án
 
+```mermaid
+graph TD
+    A[BTL_NLP] --> B[Source Code]
+    A --> C[Config & Run Scripts]
+    A --> D[Data & Output]
+
+    B --> B1[transformer.py<br/>(Kiến trúc Model)]
+    B --> B2[train.py<br/>(Train 1h tối ưu)]
+    B --> B3[evaluate.py<br/>(Đánh giá BLEU)]
+    B --> B4[data_processing.py<br/>(Xử lý dữ liệu)]
+    B --> B5[utils.py<br/>(Tiện ích)]
+
+    C --> C1[Colab_Run.ipynb<br/>(Notebook chạy Colab)]
+    C --> C2[run_train_1h.bat/.sh<br/>(Script chạy nhanh)]
+    C --> C3[requirements.txt]
+
+    D --> D1[data/<br/>(Dữ liệu đã xử lý)]
+    D --> D2[models/<br/>(Lưu checkpoint)]
+    D --> D3[results/<br/>(Biểu đồ & Log)]
 ```
-BTL_NLP/
-├── data/                    # Thư mục chứa dữ liệu và vocabulary
-├── models/                  # Lưu mô hình đã huấn luyện
-├── results/                 # Kết quả, đồ thị và báo cáo
-├── data_processing.py       # Xử lý dữ liệu (tokenization, vocabulary, dataloader)
-├── transformer.py           # Kiến trúc Transformer từ đầu
-├── train.py                 # Script huấn luyện
-├── evaluate.py              # Script đánh giá với Beam Search
-├── utils.py                 # Các hàm tiện ích (scheduler, visualization)
-├── report.py                # Tạo báo cáo kết quả
-├── demo.py                  # Demo dịch câu
-├── main.py                  # Script chạy toàn bộ pipeline
-├── requirements.txt         # Dependencies
-├── README.md                # File này
-├── QUICKSTART.md            # Hướng dẫn sử dụng nhanh
-└── ARCHITECTURE.md          # Tài liệu kỹ thuật chi tiết
-```
+
+### 📝 Chi Tiết Chức Năng
+
+**1. Mã Nguồn Cốt Lõi (Core Source):**
+*   **`transformer.py`**: Chứa toàn bộ kiến trúc Transformer (Multi-Head Attention, Encoder, Decoder, Positional Encoding) được code từ đầu (from scratch).
+*   **`data_processing.py`**: Phụ trách tải dataset IWSLT (Anh-Việt), xây dựng bộ từ điển (Vocabulary), và tạo DataLoader.
+*   **`train.py`**: Script huấn luyện chính tối ưu cho demo/bài tập lớn (giới hạn 1h, dùng Mixed Precision).
+*   **`evaluate.py`**: Đánh giá model với BLEU score trên tập test.
+*   **`utils.py`**: Các hàm phụ trợ (check GPU, vẽ biểu đồ training, lưu/tải checkpoint).
+
+**2. Môi Trường & Chạy (Environment):**
+*   **`Colab_Run.ipynb`**: Notebook chạy toàn bộ dự án trên Google Colab.
+*   **`requirements.txt`**: Danh sách thư viện cần thiết.
+
+**3. Dữ Liệu & Kết Quả:**
+*   **`data/`**: Chứa dữ liệu tokenized.
+*   **`models/`**: Lưu `best_model.pt` và `final_model.pt`.
+*   **`results/`**: Lưu biểu đồ loss/perplexity và kết quả dịch mẫu.
 
 ## 🔧 Cài Đặt
 
@@ -79,6 +99,14 @@ python report.py
 # 5. Demo dịch câu
 python demo.py --sentences "xin chào" "tôi là sinh viên"
 ```
+
+### Cách 3: Chạy trên Google Colab
+
+1. Tải file `Colab_Run.ipynb` lên Google Colab.
+2. Chạy các cell theo thứ tự để:
+   - Clone repo & cài dependencies.
+   - Train model (tối ưu 1 giờ) + Lưu kết quả vào Drive.
+   - Evaluate kết quả.
 
 Xem thêm chi tiết trong [QUICKSTART.md](QUICKSTART.md)
 
