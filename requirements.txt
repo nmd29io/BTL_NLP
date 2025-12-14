@@ -1,0 +1,12 @@
+torch
+torchtext
+numpy
+matplotlib
+seaborn
+tqdm
+sacrebleu
+pandas
+sentencepiece
+datasets
+transformers
+
