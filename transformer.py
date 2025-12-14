@@ -317,11 +317,12 @@ class Transformer(nn.Module):
         
         return src_mask, tgt_mask
     
-    def encode(self, src):
+    def encode(self, src, src_mask):
         """
         Encoder forward pass
         Args:
             src: [batch_size, src_len]
+            src_mask: [batch_size, 1, 1, src_len]
         Returns:
             enc_output: [batch_size, src_len, d_model]
         """
@@ -333,7 +334,7 @@ class Transformer(nn.Module):
         # Encoder layers
         enc_output = src_emb
         for layer in self.encoder_layers:
-            enc_output = layer(enc_output, mask=None)
+            enc_output = layer(enc_output, mask=src_mask)
         
         return enc_output
     
@@ -373,7 +374,7 @@ class Transformer(nn.Module):
         src_mask, tgt_mask = self.generate_mask(src, tgt)
         
         # Encode
-        enc_output = self.encode(src)
+        enc_output = self.encode(src, src_mask)
         
         # Decode
         dec_output = self.decode(tgt, enc_output, src_mask, tgt_mask)
