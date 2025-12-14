@@ -240,25 +240,49 @@ def prepare_data(data_dir='data', max_len=128, min_freq=2, batch_size=32,
     print("BƯỚC 1: Tải dữ liệu")
     print("=" * 50)
     
-    # Tải dữ liệu train
-    train_src, train_tgt = load_iwslt_data(data_dir, split='train', iwslt_dir=iwslt_dir)
+    # Kiểm tra cache
+    processed_data_path = os.path.join(data_dir, 'processed_data.pkl')
     
-    # Tải dữ liệu validation và test (nếu có)
-    try:
-        val_src, val_tgt = load_iwslt_data(data_dir, split='validation', iwslt_dir=iwslt_dir)
-        test_src, test_tgt = load_iwslt_data(data_dir, split='test', iwslt_dir=iwslt_dir)
-    except:
-        # Chia dữ liệu train thành train/val/test
-        total = len(train_src)
-        val_size = int(total * val_split)
-        test_size = int(total * (1 - train_split - val_split))
+    if os.path.exists(processed_data_path):
+        print(f"✓ Đã tìm thấy cache tại {processed_data_path}. Đang tải...")
+        with open(processed_data_path, 'rb') as f:
+            cached_data = pickle.load(f)
+            train_src = cached_data['train_src']
+            train_tgt = cached_data['train_tgt']
+            val_src = cached_data['val_src']
+            val_tgt = cached_data['val_tgt']
+            test_src = cached_data['test_src']
+            test_tgt = cached_data['test_tgt']
+    else:
+        # Tải dữ liệu train
+        train_src, train_tgt = load_iwslt_data(data_dir, split='train', iwslt_dir=iwslt_dir)
         
-        val_src = train_src[:val_size]
-        val_tgt = train_tgt[:val_size]
-        test_src = train_src[val_size:val_size+test_size]
-        test_tgt = train_tgt[val_size:val_size+test_size]
-        train_src = train_src[val_size+test_size:]
-        train_tgt = train_tgt[val_size+test_size:]
+        # Tải dữ liệu validation và test (nếu có)
+        try:
+            val_src, val_tgt = load_iwslt_data(data_dir, split='validation', iwslt_dir=iwslt_dir)
+            test_src, test_tgt = load_iwslt_data(data_dir, split='test', iwslt_dir=iwslt_dir)
+        except:
+            # Chia dữ liệu train thành train/val/test
+            total = len(train_src)
+            val_size = int(total * val_split)
+            test_size = int(total * (1 - train_split - val_split))
+            
+            val_src = train_src[:val_size]
+            val_tgt = train_tgt[:val_size]
+            test_src = train_src[val_size:val_size+test_size]
+            test_tgt = train_tgt[val_size:val_size+test_size]
+            train_src = train_src[val_size+test_size:]
+            train_tgt = train_tgt[val_size+test_size:]
+        
+        # Lưu cache
+        print(f"Đang lưu cache vào {processed_data_path}...")
+        with open(processed_data_path, 'wb') as f:
+            pickle.dump({
+                'train_src': train_src, 'train_tgt': train_tgt,
+                'val_src': val_src, 'val_tgt': val_tgt,
+                'test_src': test_src, 'test_tgt': test_tgt
+            }, f)
+        print("✓ Đã lưu cache dữ liệu.")
     
     print(f"Số lượng cặp câu train: {len(train_src)}")
     print(f"Số lượng cặp câu validation: {len(val_src)}")
@@ -268,22 +292,35 @@ def prepare_data(data_dir='data', max_len=128, min_freq=2, batch_size=32,
     print("BƯỚC 2: Xây dựng Vocabulary")
     print("=" * 50)
     
-    # Xây dựng vocabulary cho source (Vietnamese)
+    # Xây dựng hoặc tải vocabulary
+    src_vocab_path = os.path.join(data_dir, 'src_vocab.pkl')
+    tgt_vocab_path = os.path.join(data_dir, 'tgt_vocab.pkl')
+    
     src_vocab = Vocabulary(min_freq=min_freq)
-    src_vocab.build_vocab(train_src)
-    print(f"Source vocabulary size: {len(src_vocab)}")
-    print(f"Top 10 từ phổ biến: {src_vocab.word_count.most_common(10)}")
-    
-    # Xây dựng vocabulary cho target (English)
     tgt_vocab = Vocabulary(min_freq=min_freq)
-    tgt_vocab.build_vocab(train_tgt)
-    print(f"Target vocabulary size: {len(tgt_vocab)}")
-    print(f"Top 10 từ phổ biến: {tgt_vocab.word_count.most_common(10)}")
     
-    # Lưu vocabulary
-    os.makedirs(data_dir, exist_ok=True)
-    src_vocab.save(os.path.join(data_dir, 'src_vocab.pkl'))
-    tgt_vocab.save(os.path.join(data_dir, 'tgt_vocab.pkl'))
+    if os.path.exists(src_vocab_path) and os.path.exists(tgt_vocab_path):
+        print(f"Đã tìm thấy vocabulary tại {data_dir}. Đang tải lại...")
+        src_vocab.load(src_vocab_path)
+        tgt_vocab.load(tgt_vocab_path)
+        print(f"Đã tải Source vocabulary size: {len(src_vocab)}")
+        print(f"Đã tải Target vocabulary size: {len(tgt_vocab)}")
+    else:
+        print("Không tìm thấy vocabulary có sẵn. Đang xây dựng mới...")
+        # Xây dựng vocabulary cho source (Vietnamese)
+        src_vocab.build_vocab(train_src)
+        print(f"Source vocabulary size: {len(src_vocab)}")
+        print(f"Top 10 từ phổ biến: {src_vocab.word_count.most_common(10)}")
+        
+        # Xây dựng vocabulary cho target (English)
+        tgt_vocab.build_vocab(train_tgt)
+        print(f"Target vocabulary size: {len(tgt_vocab)}")
+        print(f"Top 10 từ phổ biến: {tgt_vocab.word_count.most_common(10)}")
+        
+        # Lưu vocabulary
+        os.makedirs(data_dir, exist_ok=True)
+        src_vocab.save(src_vocab_path)
+        tgt_vocab.save(tgt_vocab_path)
     
     print("\n" + "=" * 50)
     print("BƯỚC 3: Tạo DataLoader")

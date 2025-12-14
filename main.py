@@ -41,6 +41,8 @@ def main():
     parser.add_argument('--save_every', type=int, default=10)
     
     # Evaluation hyperparameters
+    parser.add_argument('--beam_size', type=int, default=5)
+    parser.add_argument('--decoding_mode', type=str, default='both', choices=['beam', 'greedy', 'both'])
     parser.add_argument('--max_time_hours', type=float, default=1.0)
     
     args = parser.parse_args()
@@ -114,7 +116,8 @@ def main():
             'batch_size': args.batch_size,
             'max_len': args.max_len,
             'min_freq': args.min_freq,
-            'beam_size': args.beam_size
+            'beam_size': args.beam_size,
+            'decoding_mode': args.decoding_mode
         }
         
         evaluate(config, data=data)

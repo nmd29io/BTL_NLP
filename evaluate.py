@@ -282,28 +282,36 @@ def evaluate(config, data=None):
     print("✓ Đã tải mô hình")
     
     # Đánh giá với Beam Search
-    print("\n" + "="*60)
-    print("ĐÁNH GIÁ VỚI BEAM SEARCH")
-    print("="*60)
-    beam_predictions, references = evaluate_model(
-        model, test_loader, src_vocab, tgt_vocab, device,
-        decoder_type='beam', beam_size=config['beam_size'], max_len=config['max_len']
-    )
-    beam_bleu_score, beam_bleu = calculate_bleu_score(beam_predictions, references)
-    print(f"BLEU Score (Beam Search): {beam_bleu_score:.2f}")
-    print(f"Chi tiết: {beam_bleu}")
+    beam_predictions = []
+    if config.get('decoding_mode', 'both') in ['beam', 'both']:
+        print("\n" + "="*60)
+        print(f"ĐÁNH GIÁ VỚI BEAM SEARCH (Beam Size: {config['beam_size']})")
+        print("="*60)
+        beam_predictions, references = evaluate_model(
+            model, test_loader, src_vocab, tgt_vocab, device,
+            decoder_type='beam', beam_size=config['beam_size'], max_len=config['max_len']
+        )
+        beam_bleu_score, beam_bleu = calculate_bleu_score(beam_predictions, references)
+        print(f"BLEU Score (Beam Search): {beam_bleu_score:.2f}")
+        print(f"Chi tiết: {beam_bleu}")
     
     # Đánh giá với Greedy Search
-    print("\n" + "="*60)
-    print("ĐÁNH GIÁ VỚI GREEDY SEARCH")
-    print("="*60)
-    greedy_predictions, _ = evaluate_model(
-        model, test_loader, src_vocab, tgt_vocab, device,
-        decoder_type='greedy', max_len=config['max_len']
-    )
-    greedy_bleu_score, greedy_bleu = calculate_bleu_score(greedy_predictions, references)
-    print(f"BLEU Score (Greedy Search): {greedy_bleu_score:.2f}")
-    print(f"Chi tiết: {greedy_bleu}")
+    greedy_predictions = []
+    if config.get('decoding_mode', 'both') in ['greedy', 'both']:
+        print("\n" + "="*60)
+        print("ĐÁNH GIÁ VỚI GREEDY SEARCH")
+        print("="*60)
+        # Nếu chưa chạy beam search thì reference chưa được tạo, cần tạo lại (bên trong evaluate_model vẫn trả về)
+        greedy_predictions, ref_greedy = evaluate_model(
+            model, test_loader, src_vocab, tgt_vocab, device,
+            decoder_type='greedy', max_len=config['max_len']
+        )
+        if not references: # Nếu chưa có references từ bước beam search
+            references = ref_greedy
+            
+        greedy_bleu_score, greedy_bleu = calculate_bleu_score(greedy_predictions, references)
+        print(f"BLEU Score (Greedy Search): {greedy_bleu_score:.2f}")
+        print(f"Chi tiết: {greedy_bleu}")
     
     # Lưu kết quả
     os.makedirs(config['results_dir'], exist_ok=True)
@@ -368,6 +376,8 @@ if __name__ == '__main__':
     parser.add_argument('--max_len', type=int, default=128, help='Maximum sequence length')
     parser.add_argument('--min_freq', type=int, default=2, help='Minimum word frequency')
     parser.add_argument('--beam_size', type=int, default=5, help='Beam search size')
+    parser.add_argument('--decoding_mode', type=str, default='both', choices=['beam', 'greedy', 'both'],
+                       help='Decoding mode: beam, greedy, or both')
     
     args = parser.parse_args()
     
