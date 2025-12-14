@@ -143,7 +143,20 @@ def train_model(config):
         )
         
         if time_stopped:
+            print("\nĐừng lo: Đã hết thời gian (Stop by Time Limit). Đang lưu model hiện tại...")
             should_stop = True
+            
+            # Lưu final model
+            final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
+            save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
+            
+            # Nếu chưa có best model (chưa xong epoch 1), dùng luôn final model làm best
+            best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
+            if not os.path.exists(best_model_path):
+                print("Chưa có best model, sao chép final model thành best model để đánh giá.")
+                import shutil
+                shutil.copy(final_model_path, best_model_path)
+
         
         train_ppl = calculate_perplexity(train_loss)
         train_losses.append(train_loss)
