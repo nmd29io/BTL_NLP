@@ -127,86 +127,103 @@ def train_model(config, data=None):
     epoch = 0
     should_stop = False
     
-    while not should_stop:
-        epoch += 1
-        
-        # Kiểm tra thời gian trước khi bắt đầu epoch
-        elapsed = time.time() - start_time
-        if elapsed >= max_time_seconds:
-            print(f"\nĐã đạt giới hạn thời gian ({config.get('max_time_hours', 1.0):.2f} giờ)")
-            break
-        
-        print(f"\nEpoch {epoch}")
-        print("-" * 60)
-        
-        # Train
-        remaining_time = max_time_seconds - elapsed
-        train_loss, time_stopped = train_epoch(
-            model, train_loader, criterion, optimizer, scheduler, device, 
-            config['clip_grad'], scaler, remaining_time, start_time
-        )
-        
-        if time_stopped:
-            print("\nĐừng lo: Đã hết thời gian (Stop by Time Limit). Đang lưu model hiện tại...")
-            should_stop = True
+    try:
+        while not should_stop:
+            epoch += 1
             
-            # Lưu final model
-            final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
-            save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
-            
-            # Nếu chưa có best model (chưa xong epoch 1), dùng luôn final model làm best
-            best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
-            if not os.path.exists(best_model_path):
-                print("Chưa có best model, sao chép final model thành best model để đánh giá.")
-                import shutil
-                shutil.copy(final_model_path, best_model_path)
-
-        
-        train_ppl = calculate_perplexity(train_loss)
-        train_losses.append(train_loss)
-        train_perplexities.append(train_ppl)
-        
-        # Validate (chỉ validate nếu còn thời gian)
-        if not should_stop:
+            # Kiểm tra thời gian trước khi bắt đầu epoch
             elapsed = time.time() - start_time
-            if elapsed < max_time_seconds * 0.95:  # Dành 5% thời gian cho validation
-                val_loss = validate(model, val_loader, criterion, device)
-                val_ppl = calculate_perplexity(val_loss)
-                val_losses.append(val_loss)
-                val_perplexities.append(val_ppl)
+            if elapsed >= max_time_seconds:
+                print(f"\nĐã đạt giới hạn thời gian ({config.get('max_time_hours', 1.0):.2f} giờ)")
+                break
+            
+            print(f"\nEpoch {epoch}")
+            print("-" * 60)
+            
+            # Train
+            remaining_time = max_time_seconds - elapsed
+            train_loss, time_stopped = train_epoch(
+                model, train_loader, criterion, optimizer, scheduler, device, 
+                config['clip_grad'], scaler, remaining_time, start_time
+            )
+            
+            if time_stopped:
+                print("\nĐừng lo: Đã hết thời gian (Stop by Time Limit). Đang lưu model hiện tại...")
+                should_stop = True
                 
-                print(f"Train Loss: {train_loss:.4f} | Train PPL: {train_ppl:.2f}")
-                print(f"Val Loss: {val_loss:.4f} | Val PPL: {val_ppl:.2f}")
-                print(f"Learning Rate: {scheduler.get_lr():.2e}")
-                print(f"Thời gian đã dùng: {(time.time() - start_time)/3600:.2f} giờ")
-                
-                # Lưu best model
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
-                    patience_counter = 0
-                    best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
-                    save_checkpoint(model, optimizer, epoch, val_loss, best_model_path)
-                else:
-                    patience_counter += 1
-                
-                # Early stopping
-                if patience_counter >= config.get('patience', 10):
-                    print(f"\nEarly stopping tại epoch {epoch}")
-                    should_stop = True
-            else:
-                print(f"Train Loss: {train_loss:.4f} | Train PPL: {train_ppl:.2f}")
-                print(f"Learning Rate: {scheduler.get_lr():.2e}")
-                print(f"Thời gian đã dùng: {(time.time() - start_time)/3600:.2f} giờ")
-                # Lưu model cuối cùng
+                # Lưu final model
                 final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
                 save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
+                
+                # Nếu chưa có best model (chưa xong epoch 1), dùng luôn final model làm best
+                best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
+                if not os.path.exists(best_model_path):
+                    print("Chưa có best model, sao chép final model thành best model để đánh giá.")
+                    import shutil
+                    shutil.copy(final_model_path, best_model_path)
+
+            
+            train_ppl = calculate_perplexity(train_loss)
+            train_losses.append(train_loss)
+            train_perplexities.append(train_ppl)
+            
+            # Validate (chỉ validate nếu còn thời gian)
+            if not should_stop:
+                elapsed = time.time() - start_time
+                if elapsed < max_time_seconds * 0.95:  # Dành 5% thời gian cho validation
+                    val_loss = validate(model, val_loader, criterion, device)
+                    val_ppl = calculate_perplexity(val_loss)
+                    val_losses.append(val_loss)
+                    val_perplexities.append(val_ppl)
+                    
+                    print(f"Train Loss: {train_loss:.4f} | Train PPL: {train_ppl:.2f}")
+                    print(f"Val Loss: {val_loss:.4f} | Val PPL: {val_ppl:.2f}")
+                    print(f"Learning Rate: {scheduler.get_lr():.2e}")
+                    print(f"Thời gian đã dùng: {(time.time() - start_time)/3600:.2f} giờ")
+                    
+                    # Lưu best model
+                    if val_loss < best_val_loss:
+                        best_val_loss = val_loss
+                        patience_counter = 0
+                        best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
+                        save_checkpoint(model, optimizer, epoch, val_loss, best_model_path)
+                    else:
+                        patience_counter += 1
+                    
+                    # Early stopping
+                    if patience_counter >= config.get('patience', 10):
+                        print(f"\nEarly stopping tại epoch {epoch}")
+                        should_stop = True
+                else:
+                    print(f"Train Loss: {train_loss:.4f} | Train PPL: {train_ppl:.2f}")
+                    print(f"Learning Rate: {scheduler.get_lr():.2e}")
+                    print(f"Thời gian đã dùng: {(time.time() - start_time)/3600:.2f} giờ")
+                    # Lưu model cuối cùng
+                    final_model_path = os.path.join(config['model_dir'], 'final_model.pt')
+                    save_checkpoint(model, optimizer, epoch, train_loss, final_model_path)
+            
+            # Lưu checkpoint định kỳ
+            if epoch % config.get('save_every', 5) == 0 and not should_stop:
+                checkpoint_path = os.path.join(config['model_dir'], f'checkpoint_epoch_{epoch}.pt')
+                save_checkpoint(model, optimizer, epoch, 
+                              val_losses[-1] if val_losses else train_loss, 
+                              checkpoint_path)
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️ Đã ngắt thủ công (Ctrl+C)!")
+        print("Đang lưu model hiện tại (interrupted_model.pt)...")
+        interrupted_path = os.path.join(config['model_dir'], 'interrupted_model.pt')
+        save_checkpoint(model, optimizer, epoch, 0.0, interrupted_path)
         
-        # Lưu checkpoint định kỳ
-        if epoch % config.get('save_every', 5) == 0 and not should_stop:
-            checkpoint_path = os.path.join(config['model_dir'], f'checkpoint_epoch_{epoch}.pt')
-            save_checkpoint(model, optimizer, epoch, 
-                          val_losses[-1] if val_losses else train_loss, 
-                          checkpoint_path)
+        # Nếu chưa có best_model thì dùng luôn cái này
+        best_model_path = os.path.join(config['model_dir'], 'best_model.pt')
+        if not os.path.exists(best_model_path):
+            print("Chưa có best model, dùng tạm model bị ngắt này để đánh giá.")
+            import shutil
+            shutil.copy(interrupted_path, best_model_path)
+        
+        # Vẫn cho phép vẽ đồ thị
+        should_stop = True
     
     # Lưu đồ thị training history
     if len(train_losses) > 0:
