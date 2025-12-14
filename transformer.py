@@ -115,11 +115,9 @@ class MultiHeadAttention(nn.Module):
         attn_output, attn_weights = self.attention(Q, K, V, mask)
         
         # Concatenate heads
-        # Output length should match Q's length (seq_len), not K/V's length
-        output_seq_len = attn_output.size(2)  # This should be seq_len (from Q)
-
+        # attn_output shape: [batch_size, n_heads, seq_len, d_k]
         attn_output = attn_output.transpose(1, 2).contiguous().view(
-            batch_size, output_seq_len, self.d_model
+            batch_size, seq_len, self.d_model
         )
         
         # Output projection
@@ -295,6 +293,24 @@ class Transformer(nn.Module):
         self.output_projection = nn.Linear(d_model, tgt_vocab_size)
         
         self.dropout = nn.Dropout(dropout)
+
+        # Khởi tạo weights ngay trong __init__
+        self._init_weights()
+
+    def _init_weights(self):
+        """Khởi tạo weights với xavier uniform"""
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+        
+        # Khởi tạo embedding với std nhỏ hơn
+        nn.init.normal_(self.src_embedding.weight, mean=0, std=self.d_model**-0.5)
+        nn.init.normal_(self.tgt_embedding.weight, mean=0, std=self.d_model**-0.5)
+        
+        # Khởi tạo output projection
+        nn.init.xavier_uniform_(self.output_projection.weight)
+        if self.output_projection.bias is not None:
+            nn.init.constant_(self.output_projection.bias, 0)
     
     def generate_mask(self, src, tgt=None):
         """
