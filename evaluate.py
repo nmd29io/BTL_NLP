@@ -223,38 +223,44 @@ def calculate_bleu_score(predictions: List[str], references: List[List[str]]):
     return score.score, score
 
 
-def evaluate(config):
+def evaluate(config, data=None):
     """Đánh giá mô hình"""
     
     # Device
     device = get_device()
     print(f"Sử dụng device: {device}")
     
-    # Load vocabulary
-    import pickle
-    with open(os.path.join(config['data_dir'], 'src_vocab.pkl'), 'rb') as f:
-        src_vocab_data = pickle.load(f)
-        src_vocab = Vocabulary()
-        src_vocab.word2idx = src_vocab_data['word2idx']
-        src_vocab.idx2word = src_vocab_data['idx2word']
-        src_vocab.word_count = src_vocab_data['word_count']
-    
-    with open(os.path.join(config['data_dir'], 'tgt_vocab.pkl'), 'rb') as f:
-        tgt_vocab_data = pickle.load(f)
-        tgt_vocab = Vocabulary()
-        tgt_vocab.word2idx = tgt_vocab_data['word2idx']
-        tgt_vocab.idx2word = tgt_vocab_data['idx2word']
-        tgt_vocab.word_count = tgt_vocab_data['word_count']
-    
-    # Load test data
-    from data_processing import prepare_data
-    data = prepare_data(
-        data_dir=config['data_dir'],
-        max_len=config['max_len'],
-        min_freq=config['min_freq'],
-        batch_size=config['batch_size']
-    )
-    test_loader = data['test_loader']
+    if data is None:
+        # Load vocabulary manually if data not provided
+        import pickle
+        with open(os.path.join(config['data_dir'], 'src_vocab.pkl'), 'rb') as f:
+            src_vocab_data = pickle.load(f)
+            src_vocab = Vocabulary()
+            src_vocab.word2idx = src_vocab_data['word2idx']
+            src_vocab.idx2word = src_vocab_data['idx2word']
+            src_vocab.word_count = src_vocab_data['word_count']
+        
+        with open(os.path.join(config['data_dir'], 'tgt_vocab.pkl'), 'rb') as f:
+            tgt_vocab_data = pickle.load(f)
+            tgt_vocab = Vocabulary()
+            tgt_vocab.word2idx = tgt_vocab_data['word2idx']
+            tgt_vocab.idx2word = tgt_vocab_data['idx2word']
+            tgt_vocab.word_count = tgt_vocab_data['word_count']
+        
+        # Load test data
+        from data_processing import prepare_data
+        data_res = prepare_data(
+            data_dir=config['data_dir'],
+            max_len=config['max_len'],
+            min_freq=config['min_freq'],
+            batch_size=config['batch_size']
+        )
+        test_loader = data_res['test_loader']
+    else:
+        print("✓ Sử dụng dữ liệu đã được nạp sẵn.")
+        src_vocab = data['src_vocab']
+        tgt_vocab = data['tgt_vocab']
+        test_loader = data['test_loader']
     
     # Load model
     print(f"\nĐang tải mô hình từ {config['model_path']}...")

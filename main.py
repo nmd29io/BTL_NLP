@@ -50,12 +50,13 @@ def main():
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.results_dir, exist_ok=True)
     
+    data = None
     if args.mode in ['data', 'all']:
         print("="*60)
         print("BƯỚC 1: XỬ LÝ DỮ LIỆU")
         print("="*60)
         from data_processing import prepare_data
-        prepare_data(
+        data = prepare_data(
             data_dir=args.data_dir,
             max_len=args.max_len,
             min_freq=args.min_freq,
@@ -90,7 +91,7 @@ def main():
             'save_every': args.save_every
         }
         
-        train_model(config)
+        train_model(config, data=data)
         print("\n✓ Hoàn thành huấn luyện!\n")
     
     if args.mode in ['eval', 'all']:
@@ -115,7 +116,7 @@ def main():
             'beam_size': args.beam_size
         }
         
-        evaluate(config)
+        evaluate(config, data=data)
         print("\n✓ Hoàn thành đánh giá!\n")
     
     if args.mode == 'all':

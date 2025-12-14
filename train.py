@@ -28,7 +28,7 @@ from utils import get_device, WarmupScheduler, save_checkpoint, plot_training_hi
 
 
 
-def train_model(config):
+def train_model(config, data=None):
     """Huấn luyện mô hình với cấu hình tối ưu cho 1 giờ"""
     
     # Device
@@ -45,14 +45,18 @@ def train_model(config):
     print("\n" + "="*60)
     print("CHUẨN BỊ DỮ LIỆU")
     print("="*60)
-    data = prepare_data(
-        data_dir=config['data_dir'],
-        max_len=config['max_len'],
-        min_freq=config['min_freq'],
-        batch_size=config['batch_size'],
-        iwslt_dir=config.get('iwslt_dir', 'iwslt_en_vi'),
-        num_workers=config.get('num_workers', 4 if torch.cuda.is_available() else 0)
-    )
+    
+    if data is None:
+        data = prepare_data(
+            data_dir=config['data_dir'],
+            max_len=config['max_len'],
+            min_freq=config['min_freq'],
+            batch_size=config['batch_size'],
+            iwslt_dir=config.get('iwslt_dir', 'iwslt_en_vi'),
+            num_workers=config.get('num_workers', 4 if torch.cuda.is_available() else 0)
+        )
+    else:
+        print("✓ Sử dụng dữ liệu đã được nạp sẵn.")
     
     train_loader = data['train_loader']
     val_loader = data['val_loader']
