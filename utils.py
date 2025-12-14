@@ -36,7 +36,7 @@ def train_epoch(model, train_loader, criterion, optimizer, scheduler, device,
         
         if scaler is not None:
             # Mixed precision training
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 output = model(src, tgt_input)
                 output = output.view(-1, output.size(-1))
                 tgt_output_flat = tgt_output.view(-1)
@@ -181,7 +181,7 @@ def save_checkpoint(model, optimizer, scheduler, epoch, loss, path, config=None)
     print(f"✓ Đã lưu checkpoint tại {path}")
 
 
-def load_checkpoint(model, optimizer, scheduler, path, device):
+def load_checkpoint(model, optimizer, scheduler, path, device, reset_scheduler=False):
     """Tải checkpoint"""
     checkpoint = torch.load(path, map_location=device)
     
@@ -207,12 +207,17 @@ def load_checkpoint(model, optimizer, scheduler, path, device):
                 new_state_dict[k] = v
         model.load_state_dict(new_state_dict)
 
-    if optimizer:
+    if optimizer and not reset_scheduler:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    elif reset_scheduler:
+        print("➤ Đã reset optimizer state.")
     
     if scheduler and 'scheduler_state_dict' in checkpoint and checkpoint['scheduler_state_dict']:
-        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        
+        if not reset_scheduler:
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        else:
+            print("➤ Đã reset scheduler state (Learning Rate sẽ bắt đầu lại từ đầu).")
+            
     epoch = checkpoint['epoch']
     loss = checkpoint['loss']
     config = checkpoint.get('config', None)

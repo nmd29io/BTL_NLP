@@ -37,7 +37,7 @@ def train_model(config, data=None):
     
     # Mixed precision training
     use_amp = config.get('use_amp', True) and torch.cuda.is_available()
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    scaler = torch.amp.GradScaler('cuda') if use_amp else None
     if use_amp:
         print("✓ Sử dụng Mixed Precision Training (AMP)")
     
@@ -135,7 +135,8 @@ def train_model(config, data=None):
             from utils import load_checkpoint
             # Load checkpoint
             loaded_epoch, loaded_loss, loaded_config = load_checkpoint(
-                model, optimizer, scheduler, config['resume_from'], device
+                model, optimizer, scheduler, config['resume_from'], device,
+                reset_scheduler=config.get('reset_scheduler', False)
             )
             start_epoch = loaded_epoch
             print(f"✓ Đã khôi phục training từ epoch {start_epoch}")
@@ -353,6 +354,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_time_hours', type=float, default=1.0, help='Maximum training time in hours')
     parser.add_argument('--resume_from', type=str, default=None, help='Path to checkpoint to resume from')
     parser.add_argument('--keep_last_n', type=int, default=2, help='Keep only N latest checkpoints (default: 2)')
+    parser.add_argument('--reset_scheduler', action='store_true', help='Reset optimizer and scheduler states when resuming')
     
     args = parser.parse_args()
     
@@ -382,7 +384,8 @@ if __name__ == '__main__':
         'num_workers': args.num_workers,
         'max_time_hours': args.max_time_hours,
         'resume_from': args.resume_from,
-        'keep_last_n': args.keep_last_n
+        'keep_last_n': args.keep_last_n,
+        'reset_scheduler': args.reset_scheduler
     }
     
     train_model(config)
