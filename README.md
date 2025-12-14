@@ -54,9 +54,10 @@ graph TD
 *   **`evaluate.py`**: Đánh giá model với BLEU score trên tập test.
 *   **`utils.py`**: Các hàm phụ trợ (check GPU, vẽ biểu đồ training, lưu/tải checkpoint).
 
-**2. Môi Trường & Chạy (Environment):**
-*   **`Colab_Run.ipynb`**: Notebook chạy toàn bộ dự án trên Google Colab.
-*   **`requirements.txt`**: Danh sách thư viện cần thiết.
+**2. Môi trường chạy:**
+1. **Google Colab (Khuyến nghị)**: Sử dụng file `Colab_Run.ipynb`.
+2. **Kaggle**: Sử dụng file `Kaggle_Run.ipynb` (nếu hết GPU Colab).
+3. **Local PC**: Cài đặt Python 3.8+ và các thư viện trong `requirements.txt`.
 
 **3. Dữ Liệu & Kết Quả:**
 *   **`data/`**: Chứa dữ liệu tokenized.
@@ -75,7 +76,13 @@ pip install -r requirements.txt
 
 ## 🚀 Sử Dụng
 
-### Cách 1: Chạy từng bước (Cơ bản)
+### Cách 1: Chạy toàn bộ pipeline (Khuyến nghị)
+
+```bash
+python main.py --mode all
+```
+
+### Cách 2: Chạy từng bước
 
 ```bash
 # 1. Xử lý dữ liệu
