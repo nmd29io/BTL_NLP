@@ -37,8 +37,9 @@ graph TD
     B --> B5["utils.py<br/>(Tiện ích)"]
 
     C --> C1["Colab_Run.ipynb<br/>(Notebook chạy Colab)"]
-    C --> C2["git_sync.bat<br/>(Sync code với GitHub)"]
-    C --> C3["requirements.txt"]
+    C --> C2["Kaggle_Run.ipynb<br/>(Notebook chạy Kaggle)"]
+    C --> C3["git_sync.bat<br/>(Sync code với GitHub)"]
+    C --> C4["requirements.txt"]
 
     D --> D1["data/<br/>(Dữ liệu đã xử lý)"]
     D --> D2["models/<br/>(Lưu checkpoint)"]
@@ -108,6 +109,14 @@ python demo.py --sentences "xin chào" "tôi là sinh viên"
    - Clone repo & cài dependencies.
    - Train model (tối ưu 1 giờ) + Lưu kết quả vào Drive.
    - Evaluate kết quả.
+
+### Cách 4: Chạy trên Kaggle (Khi hết GPU Colab)
+
+1. Tạo Notebook mới trên Kaggle.
+2. Import file `Kaggle_Run.ipynb`.
+3. Bật **Internet On** trong Settings.
+4. Chạy toàn bộ (Run All).
+5. Tải file kết quả `experiment_results.zip` từ tab Output.
 
 Xem thêm chi tiết trong [QUICKSTART.md](QUICKSTART.md)
 

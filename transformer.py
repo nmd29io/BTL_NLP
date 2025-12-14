@@ -43,13 +43,14 @@ class ScaledDotProductAttention(nn.Module):
         # Tính QK^T
         scores = torch.matmul(Q, K.transpose(-2, -1)) / self.scale
         
-        # Áp dụng mask nếu có
+        # Áp dụng mask (nếu có)
         if mask is not None:
-            scores = scores.masked_fill(mask == 0, -1e9)
+            # -1e9 là quá lớn với float16 (gây overflow), dùng -1e4 là đủ nhỏ cho softmax
+            scores = scores.masked_fill(mask == 0, -1e4)
         
-        # Softmax
-        attention_weights = F.softmax(scores, dim=-1)
-        attention_weights = self.dropout(attention_weights)
+        # Softmax để lấy attention weights
+        attn_weights = torch.softmax(scores, dim=-1)
+        attention_weights = self.dropout(attn_weights)
         
         # Nhân với V
         output = torch.matmul(attention_weights, V)

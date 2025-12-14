@@ -9,7 +9,19 @@ pip install -r requirements.txt
 
 ## Chạy Toàn Bộ Pipeline
 
-### Chạy từng script riêng
+### Cách 1: Sử dụng main.py (Khuyến nghị)
+
+```bash
+# Chạy tất cả: xử lý dữ liệu -> huấn luyện -> đánh giá -> báo cáo
+python main.py --mode all
+
+# Hoặc chạy từng bước:
+python main.py --mode data      # Chỉ xử lý dữ liệu
+python main.py --mode train     # Chỉ huấn luyện
+python main.py --mode eval      # Chỉ đánh giá
+```
+
+### Cách 2: Chạy từng script riêng
 
 ```bash
 # 1. Xử lý dữ liệu
@@ -43,6 +55,15 @@ python report.py
     2. Chạy cell đầu tiên để **tự động clone/update code mới nhất** từ Git.
     3. Chạy cell Train (đã set sẵn 1 giờ hoặc hơn).
     4. **Lưu kết quả**: Cell cuối cùng sẽ lưu Model/Result vào Google Drive.
+
+### 3. Trên Kaggle (Alternative) - Khi hết GPU Colab
+- **Mục đích**: Thay thế Colab khi bị giới hạn Usage.
+- **Thao tác**:
+    1. Tạo Notebook mới trên Kaggle.
+    2. Import file `Kaggle_Run.ipynb`.
+    3. Bật **Internet On** trong Settings.
+    4. Chạy toàn bộ (Run All).
+    5. Vào tab **Output** để tải file `experiment_results.zip`.
 
 ---
 
