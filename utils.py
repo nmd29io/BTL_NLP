@@ -184,7 +184,29 @@ def save_checkpoint(model, optimizer, scheduler, epoch, loss, path, config=None)
 def load_checkpoint(model, optimizer, scheduler, path, device):
     """Tải checkpoint"""
     checkpoint = torch.load(path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    
+    # Xử lý tương thích key giữa DataParallel và model thường
+    state_dict = checkpoint['model_state_dict']
+    
+    # Nếu model hiện tại là DataParallel
+    if isinstance(model, torch.nn.DataParallel):
+        # Nếu checkpoint không có 'module.' (do lưu ở chế độ 1 GPU hoặc đã unwrap) -> load vào model.module
+        if not list(state_dict.keys())[0].startswith('module.'):
+            model.module.load_state_dict(state_dict)
+        else:
+             # Nếu checkpoint có 'module.' -> load thẳng
+            model.load_state_dict(state_dict)
+    else:
+        # Nếu model hiện tại là Single GPU/CPU
+        # Nếu checkpoint có 'module.' (legacy save từ DataParallel) -> remove prefix
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            if k.startswith('module.'):
+                new_state_dict[k[7:]] = v
+            else:
+                new_state_dict[k] = v
+        model.load_state_dict(new_state_dict)
+
     if optimizer:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
