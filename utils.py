@@ -120,6 +120,7 @@ class WarmupScheduler:
         self.warmup_steps = warmup_steps
         self.current_step = 0
         self.base_lr = None
+        self.scale_factor = d_model ** -0.5
     
     def step(self):
         """Cập nhật learning rate"""
@@ -129,7 +130,7 @@ class WarmupScheduler:
             self.base_lr = self.optimizer.param_groups[0]['lr']
         
         # Warmup schedule
-        lr = self.base_lr * min(
+        lr = self.base_lr * self.scale_factor * min(
             self.current_step ** (-0.5),
             self.current_step * self.warmup_steps ** (-1.5)
         )

@@ -109,6 +109,7 @@ def train_model(config, data=None):
         optimizer,
         d_model=config['d_model'],
         warmup_steps=config['warmup_steps']
+        base_lr=config['learning_rate'] 
     )
     
     # Tạo thư mục lưu mô hình
