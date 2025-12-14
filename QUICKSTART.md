@@ -9,19 +9,7 @@ pip install -r requirements.txt
 
 ## Chạy Toàn Bộ Pipeline
 
-### Cách 1: Sử dụng main.py (Khuyến nghị)
-
-```bash
-# Chạy tất cả: xử lý dữ liệu -> huấn luyện -> đánh giá -> báo cáo
-python main.py --mode all
-
-# Hoặc chạy từng bước:
-python main.py --mode data      # Chỉ xử lý dữ liệu
-python main.py --mode train     # Chỉ huấn luyện
-python main.py --mode eval      # Chỉ đánh giá
-```
-
-### Cách 2: Chạy từng script riêng
+### Chạy từng script riêng
 
 ```bash
 # 1. Xử lý dữ liệu

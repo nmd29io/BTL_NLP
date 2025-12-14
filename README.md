@@ -75,13 +75,7 @@ pip install -r requirements.txt
 
 ## 🚀 Sử Dụng
 
-### Cách 1: Chạy toàn bộ pipeline (Khuyến nghị)
-
-```bash
-python main.py --mode all
-```
-
-### Cách 2: Chạy từng bước
+### Cách 1: Chạy từng bước (Cơ bản)
 
 ```bash
 # 1. Xử lý dữ liệu

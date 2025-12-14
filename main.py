@@ -41,7 +41,7 @@ def main():
     parser.add_argument('--save_every', type=int, default=10)
     
     # Evaluation hyperparameters
-    parser.add_argument('--beam_size', type=int, default=5)
+    parser.add_argument('--max_time_hours', type=float, default=1.0)
     
     args = parser.parse_args()
     
@@ -88,7 +88,8 @@ def main():
             'warmup_steps': args.warmup_steps,
             'clip_grad': args.clip_grad,
             'patience': args.patience,
-            'save_every': args.save_every
+            'save_every': args.save_every,
+            'max_time_hours': args.max_time_hours
         }
         
         train_model(config, data=data)
