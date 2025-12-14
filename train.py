@@ -80,6 +80,15 @@ def train_model(config, data=None):
     )
     
     model = model.to(device)
+    
+    # Multi-GPU support
+    if torch.cuda.device_count() > 1:
+        print(f"✓ Đã phát hiện {torch.cuda.device_count()} GPUs!")
+        print(f"  -> Đang kích hoạt chế độ DataParallel để chạy song song trên tất cả GPU.")
+        model = nn.DataParallel(model)
+    else:
+        print(f"  -> Chạy trên 1 GPU/CPU ({device})")
+        
     num_params = count_parameters(model)
     print(f"Số lượng tham số: {num_params:,}")
     
@@ -343,7 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int, default=4, help='Number of data loading workers')
     parser.add_argument('--max_time_hours', type=float, default=1.0, help='Maximum training time in hours')
     parser.add_argument('--resume_from', type=str, default=None, help='Path to checkpoint to resume from')
-    parser.add_argument('--keep_last_n', type=int, default=5, help='Keep only N latest checkpoints (default: 5)')
+    parser.add_argument('--keep_last_n', type=int, default=2, help='Keep only N latest checkpoints (default: 2)')
     
     args = parser.parse_args()
     

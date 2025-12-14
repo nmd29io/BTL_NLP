@@ -160,9 +160,16 @@ class WarmupScheduler:
 
 def save_checkpoint(model, optimizer, scheduler, epoch, loss, path, config=None):
     """Lưu checkpoint và config (nếu có)"""
+    
+    # Unwrap model nếu là DataParallel
+    if isinstance(model, torch.nn.DataParallel):
+        model_state_dict = model.module.state_dict()
+    else:
+        model_state_dict = model.state_dict()
+        
     state = {
         'epoch': epoch,
-        'model_state_dict': model.state_dict(),
+        'model_state_dict': model_state_dict,
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
         'loss': loss,
