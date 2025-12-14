@@ -37,7 +37,7 @@ graph TD
     B --> B5["utils.py<br/>(Tiện ích)"]
 
     C --> C1["Colab_Run.ipynb<br/>(Notebook chạy Colab)"]
-    C --> C2["run_train_1h.bat/.sh<br/>(Script chạy nhanh)"]
+    C --> C2["git_sync.bat<br/>(Sync code với GitHub)"]
     C --> C3["requirements.txt"]
 
     D --> D1["data/<br/>(Dữ liệu đã xử lý)"]
